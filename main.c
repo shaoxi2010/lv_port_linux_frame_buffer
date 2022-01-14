@@ -1,5 +1,5 @@
 #include "lvgl/lvgl.h"
-#include "lv_drivers/display/fbdev.h"
+#include "lv_drivers/display/drm.h"
 #include "lv_demos/lv_demo.h"
 #include "lv_drivers/indev/evdev.h"
 #include <unistd.h>
@@ -14,23 +14,25 @@ int main(void)
     /*LittlevGL init*/
     lv_init();
 
-    /*Linux frame buffer device init*/
-    fbdev_init();
+    /*Linux DRM device init*/
+    drm_init();
 
     /*A small buffer for LittlevGL to draw the screen's content*/
-    static lv_color_t buf[DISP_BUF_SIZE];
+    static lv_color_t buf1[DISP_BUF_SIZE];
+    static lv_color_t buf2[DISP_BUF_SIZE];
 
     /*Initialize a descriptor for the buffer*/
     static lv_disp_draw_buf_t disp_buf;
-    lv_disp_draw_buf_init(&disp_buf, buf, NULL, DISP_BUF_SIZE);
+    lv_disp_draw_buf_init(&disp_buf, buf1, buf2, DISP_BUF_SIZE);
 
     /*Initialize and register a display driver*/
     static lv_disp_drv_t disp_drv;
+    uint32_t dpi = 0;
     lv_disp_drv_init(&disp_drv);
     disp_drv.draw_buf   = &disp_buf;
-    disp_drv.flush_cb   = fbdev_flush;
-    disp_drv.hor_res    = 480;
-    disp_drv.ver_res    = 272;
+    disp_drv.flush_cb   = drm_flush;
+    disp_drv.wait_cb    = drm_wait_vsync;
+    drm_get_sizes(&disp_drv.hor_res, &disp_drv.ver_res, &dpi);
     lv_disp_drv_register(&disp_drv);
 
     /* Linux input device init */
