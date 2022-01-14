@@ -1,6 +1,7 @@
 #include "lvgl/lvgl.h"
 #include "lv_drivers/display/fbdev.h"
 #include "lv_demos/lv_demo.h"
+#include "lv_drivers/indev/evdev.h"
 #include <unistd.h>
 #include <pthread.h>
 #include <time.h>
@@ -28,12 +29,23 @@ int main(void)
     lv_disp_drv_init(&disp_drv);
     disp_drv.draw_buf   = &disp_buf;
     disp_drv.flush_cb   = fbdev_flush;
-    disp_drv.hor_res    = 800;
-    disp_drv.ver_res    = 480;
+    disp_drv.hor_res    = 480;
+    disp_drv.ver_res    = 272;
     lv_disp_drv_register(&disp_drv);
 
+    /* Linux input device init */
+    evdev_init();
+
+    /* Initialize and register a display input driver */
+    lv_indev_drv_t indev_drv;
+    lv_indev_drv_init(&indev_drv);      /*Basic initialization*/
+
+    indev_drv.type = LV_INDEV_TYPE_POINTER;
+    indev_drv.read_cb = evdev_read;   //lv_gesture_dir_t lv_indev_get_gesture_dir(const lv_indev_t * indev)
+    lv_indev_drv_register(&indev_drv);
+
     /*Create a Demo*/
-    lv_demo_widgets();
+    lv_demo_music();
 
     /*Handle LitlevGL tasks (tickless mode)*/
     while(1) {
